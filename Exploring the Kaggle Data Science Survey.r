@@ -10,23 +10,6 @@ responses <- read_csv("datasets/kagglesurvey.csv")
 head(responses, 10)
 str(responses)
 
-library("testthat")
-library('IRkernel.testthat')
-
-run_tests({
-    test_that("Read in data correctly.", {
-        expect_is(responses, "tbl_df", 
-            info = 'You should use read_csv() (with an underscore) to read "datasets/kagglesurvey.csv" into responses.')
-    })
-    
-    test_that("Read in data correctly.", {
-        responses_test <- read_csv('datasets/kagglesurvey.csv')
-        expect_equivalent(responses, responses_test, 
-            info = 'responses should contain the data in "datasets/kagglesurvey.csv".')
-    })
-    
-})
-
 # Print the first respondent's tools and languages
 responses[1,2]
 
@@ -38,19 +21,6 @@ tools <- responses  %>%
 # View the first 6 rows of tools
 head(tools)
 
-run_tests({
-    test_that("Tools and Languages were Split and Unnested", {
-        expect_true(nrow(tools) == 47409, 
-            info = 'Make sure that you split the tools at the commas and unnested them.')
-    })
-    
-    test_that("Tools and Languages were Unnested", {
-        expect_is(tools$work_tools, "character", 
-            info = 'The work_tools column should be of class "character". Make sure that you unnested the results of str_split().')
-    })
-    
-})
-
 # Group the data by work_tools, summarise the counts, and arrange in descending order
 tool_count <- tools  %>% 
     group_by(work_tools)  %>% 
@@ -60,33 +30,11 @@ tool_count <- tools  %>%
 # Print the first 6 results
 head(tool_count)
 
-run_tests({
-    test_that("Tools were Grouped and Summarised", {
-        expect_true(nrow(tool_count) == 50, 
-            info = 'Make sure that you grouped by tools and then summarised the counts.')
-    })
-    
-    test_that("Values were sorted correctly", {
-        expect_true(tool_count[1, 2] == 6073, 
-            info = 'Do not forget to sort your tool counts from largest to smallest.')
-    })
-    
-})
-
 # Create a bar chart of the work_tools column, most counts on the far right
 # stat = "identity" means that the height of bar is the value of variable values instead of count of variables
 ggplot(tool_count, aes(x = reorder(work_tools, tool_count), y = tool_count)) + 
     geom_bar(stat = "identity") + 
     theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1))
-
-run_tests({
-   test_that("Plot is a bar chart",{
-      p <- last_plot()
-      q <- p$layers[[1]]
-      expect_is(q$geom, "GeomBar", 
-                info = "You should plot a bar chart with ggplot().")
-    })
-})
 
 # Create a new column called language preference
 debate_tools <- responses  %>% 
@@ -107,25 +55,6 @@ debate_tools %>%
 debate_tools_counts <- debate_tools %>% 
     count(language_preference)
 
-run_tests({
-    test_that("New column was created", {
-        expect_is(debate_tools$language_preference, "character", 
-            info = 'The language_preference column should be of class "character". Make sure that you filled this new column correctly.')
-    })
-    test_that("Language preferences are correct", {
-        expect_equal(filter(debate_tools_counts, language_preference == "both")  %>% pull(n), 3660, 
-            info = 'There is an incorrect amount of "both". Please check the case_when() statements.')
-        expect_equal(filter(debate_tools_counts, language_preference == "neither")  %>% pull(n), 2860, 
-            info = 'There is an incorrect amount of "neither". Please check the case_when() statements.')
-        expect_equal(filter(debate_tools_counts, language_preference == "Python")  %>% pull(n), 2413, 
-            info = 'There is an incorrect amount of "Python". Please check the case_when() statements.')
-        expect_equal(filter(debate_tools_counts, language_preference == "R")  %>% pull(n), 1220, 
-            info = 'There is an incorrect amount of "R". Please check the case_when() statements.')
-        
-    })
-    
-})
-
 # Group by language preference, calculate number of responses, and remove "neither"
 debate_plot <- debate_tools  %>% 
    group_by(language_preference)  %>% 
@@ -137,15 +66,6 @@ ggplot(debate_plot, aes(x = fct_reorder(language_preference, n), y = n)) +
   geom_bar(stat = "identity") +
   theme(axis.text.x = element_text(angle = 90))
 
-run_tests({
-   test_that("Plot is a bar chart",{
-      p <- last_plot()
-      q <- p$layers[[1]]
-      expect_is(q$geom, "GeomBar",
-               info = "You should plot a bar chart with ggplot().")
-    })
-})
-
 # Group by, summarise, arrange, mutate, and filter
 recommendations <- debate_tools  %>% 
     group_by(language_preference, LanguageRecommendationSelect)  %>%
@@ -154,36 +74,12 @@ recommendations <- debate_tools  %>%
     mutate(row = row_number()) %>% 
     filter(row <= 4)
 
-run_tests({
-    test_that("Tools have been summarised", {
-        expect_true(nrow(recommendations) == 16, 
-            info = 'Make sure that you are only keeping the top 4 responses for each language used.')
-    })
-    
-})
-
 # Create a faceted bar plot
 str(recommendations)
 ggplot(recommendations, aes(x = LanguageRecommendationSelect, y = count)) +
     geom_bar(stat = "identity") +
     facet_wrap(~language_preference)
 
-run_tests({
-   test_that("Plot is a bar chart",{
-      p <- last_plot()
-      q <- p$layers[[1]]
-      expect_is(q$geom, "GeomBar",
-               info = "You should plot a bar chart with ggplot().")
-    })
-})
 
 # Would R users find this statement TRUE or FALSE?
 R_is_number_one = TRUE
-
-run_tests({
-    test_that("The question has been answered", {
-        expect_true(R_is_number_one, 
-            info = 'Try again! Should R_is_number_one be set to TRUE or FALSE?')
-    })
-    
-})
